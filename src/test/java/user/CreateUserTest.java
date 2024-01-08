@@ -1,24 +1,21 @@
 package user;
 
 import io.qameta.allure.Description;
-import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
-import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import static user.UtilsString.randomString;
+
+import static user.Utils.randomString;
 
 public class CreateUserTest {
-    public static String BASE_URL = "https://stellarburgers.nomoreparties.site";
     String accessToken;
 
     @Before
-    @Step("Перейти на сайт по базовому URL")
     public void SetUp() {
-
-        RestAssured.baseURI = BASE_URL;
+        UserClient userClient = new UserClient();
+        userClient.setBaseURL();
     }
 
     @After
@@ -50,7 +47,6 @@ public class CreateUserTest {
         accessToken = response.body().path("accessToken").toString().substring(7);
     }
 
-    // Создание пользователя.Cоздание пользователя, который уже зарегистрирован.
 
     @Test
     @DisplayName("Создание пользователя.Cоздание пользователя, который уже зарегистрирован.")
