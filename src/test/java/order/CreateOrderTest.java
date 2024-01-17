@@ -61,6 +61,7 @@ public class CreateOrderTest {
     @DisplayName("Создание заказа:без авторизациии")
     @Description("Создание заказа:без авторизациии. Заказ не создан")
     public void createOrderWithoutAuth() {
+        Boolean success = true;
 
         OrderClient orderClient = new OrderClient();
 
@@ -69,7 +70,9 @@ public class CreateOrderTest {
 
         Response response = orderClient.createOrderWithoutAuth(order);
 
-        orderClient.checkOrderResponseBody(response, null);
+        orderClient.checkStatusCode(response, HttpStatus.SC_OK);
+        orderClient.checkIsSuccessResponse(response, success);
+        orderClient.checkResponseOrderBodyNotEmpty(response);
     }
 
     @Test
