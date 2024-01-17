@@ -1,8 +1,10 @@
 package user;
 
+import com.github.javafaker.Faker;
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
+import org.apache.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,12 +19,13 @@ public class LoginUserTest {
 
     @Before
     public void SetUp() {
+        Faker faker = new Faker();
         UserClient userClient = new UserClient();
         userClient.setBaseURL();
         User user = new User()
-                .withEmail(randomString(6) + "@yandex.ru")
-                .withPassword(randomString(6))
-                .withName(randomString(6));
+                .withEmail(faker.internet().emailAddress())
+                .withPassword(faker.internet().password(6,7))
+                .withName(faker.name().name());
 
         initialName = user.getName();
         initialPassword = user.getPassword();
@@ -44,13 +47,12 @@ public class LoginUserTest {
     @Description("Логин под существующим пользователем. Запрос возвращает код ответа - 200")
     public void loginUser() {
         Boolean success = true;
-        int statusCode = 200;
 
         UserClient userClient = new UserClient();
 
         Response loginResponse = userClient.loginUser(new User().withEmail(initialEmail).withPassword(initialPassword));
 
-        userClient.checkStatusCode(loginResponse, statusCode);
+        userClient.checkStatusCode(loginResponse, HttpStatus.SC_OK);
         userClient.checkResponseBodyNotEmpty(loginResponse);
         userClient.checkIsSuccessResponse(loginResponse, success);
         userClient.checkEmailResponseBody(loginResponse, initialEmail);
@@ -63,14 +65,13 @@ public class LoginUserTest {
     @Description("Логин c неверным полем \"email\". Запрос возвращает код ответа - 401")
     public void loginWithIncorrectEmail() {
         Boolean success = false;
-        int statusCode = 401;
         String message = "email or password are incorrect";
 
         UserClient userClient = new UserClient();
 
-        Response loginResponse = userClient.loginUser(new User().withEmail(randomString(5) + initialEmail).withPassword(initialPassword));
+        Response loginResponse = userClient.loginUser(new User().withEmail("fjdhjd" + initialEmail).withPassword(initialPassword));
 
-        userClient.checkStatusCode(loginResponse, statusCode);
+        userClient.checkStatusCode(loginResponse, HttpStatus.SC_UNAUTHORIZED);
         userClient.checkResponseBodyNotEmpty(loginResponse);
         userClient.checkIsSuccessResponse(loginResponse, success);
         userClient.checkResponseBodyMessage(loginResponse, message);
@@ -81,14 +82,13 @@ public class LoginUserTest {
     @Description("Логин c неверным полем \"password\". Запрос возвращает код ответа - 401")
     public void loginWithIncorrectPassword() {
         Boolean success = false;
-        int statusCode = 401;
         String message = "email or password are incorrect";
 
         UserClient userClient = new UserClient();
 
         Response loginResponse = userClient.loginUser(new User().withEmail(initialEmail).withPassword(randomString(5) + initialPassword));
 
-        userClient.checkStatusCode(loginResponse, statusCode);
+        userClient.checkStatusCode(loginResponse, HttpStatus.SC_UNAUTHORIZED);
         userClient.checkResponseBodyNotEmpty(loginResponse);
         userClient.checkIsSuccessResponse(loginResponse, success);
         userClient.checkResponseBodyMessage(loginResponse, message);

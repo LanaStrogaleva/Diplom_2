@@ -66,9 +66,9 @@ public class OrderClient {
     }
 
     @Step("Проверить статус код")
-    public void checkStatusCode(Response response, int statusCode) {
+    public void checkStatusCode(Response response, int httpStatus) {
         response.then().assertThat()
-                .statusCode(statusCode);
+                .statusCode(httpStatus);
     }
 
     @Step("Проверить сообщение в теле ответа")

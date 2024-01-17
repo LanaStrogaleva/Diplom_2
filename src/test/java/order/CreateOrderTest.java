@@ -1,8 +1,10 @@
 package order;
 
+import com.github.javafaker.Faker;
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
+import org.apache.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,12 +18,13 @@ public class CreateOrderTest {
 
     @Before
     public void SetUp() {
+        Faker faker = new Faker();
         UserClient userClient = new UserClient();
         userClient.setBaseURL();
         User user = new User()
-                .withEmail(randomString(6) + "@yandex.ru")
-                .withPassword(randomString(6))
-                .withName(randomString(6));
+                .withEmail(faker.internet().emailAddress())
+                .withPassword(faker.internet().password(6,7))
+                .withName(faker.name().name());
 
         accessToken = userClient.createUser(user).body().path("accessToken").toString().substring(7);
 
@@ -40,7 +43,6 @@ public class CreateOrderTest {
     @Description("Создание заказа:с авторизацией. Запрос возвращает код ответа - 200")
     public void createOrderWithAuth() {
 
-        int statusCode = 200;
         Boolean success = true;
 
         OrderClient orderClient = new OrderClient();
@@ -50,7 +52,7 @@ public class CreateOrderTest {
 
         Response response = orderClient.createOrderWithAuth(accessToken, order);
 
-        orderClient.checkStatusCode(response, statusCode);
+        orderClient.checkStatusCode(response, HttpStatus.SC_OK);
         orderClient.checkIsSuccessResponse(response, success);
         orderClient.checkResponseOrderBodyNotEmpty(response);
     }
@@ -74,7 +76,7 @@ public class CreateOrderTest {
     @DisplayName("Создание заказа:с ингредиентами")
     @Description("Создание заказа:с ингредиентами. Запрос возвращает код ответа - 200")
     public void createOrderWithIngredients() {
-        int statusCode = 200;
+
         Boolean success = true;
 
         OrderClient orderClient = new OrderClient();
@@ -84,7 +86,7 @@ public class CreateOrderTest {
 
         Response response = orderClient.createOrderWithAuth(accessToken, order);
 
-        orderClient.checkStatusCode(response, statusCode);
+        orderClient.checkStatusCode(response, HttpStatus.SC_OK);
         orderClient.checkIsSuccessResponse(response, success);
         orderClient.checkResponseOrderBodyNotEmpty(response);
     }
@@ -94,7 +96,7 @@ public class CreateOrderTest {
     @DisplayName("Создание заказа:без ингредиентов")
     @Description("Создание заказа:без ингредиентов. Запрос возвращает код ответа - 400")
     public void createOrderWithoutIngredients() {
-        int statusCode = 400;
+
         Boolean success = false;
         String message = "Ingredient ids must be provided";
 
@@ -104,7 +106,7 @@ public class CreateOrderTest {
 
         Response response = orderClient.createOrderWithAuth(accessToken, order);
 
-        orderClient.checkStatusCode(response, statusCode);
+        orderClient.checkStatusCode(response, HttpStatus.SC_BAD_REQUEST);
         orderClient.checkIsSuccessResponse(response, success);
         orderClient.checkResponseBodyMessage(response, message);
     }
@@ -113,7 +115,6 @@ public class CreateOrderTest {
     @DisplayName("Создание заказа:с неверным хешем ингредиентов")
     @Description("Создание заказа:с неверным хешем ингредиентов. Запрос возвращает код ответа - 500")
     public void createOrderWithIncorrectIngredientHash() {
-        int statusCode = 500;
 
         OrderClient orderClient = new OrderClient();
 
@@ -122,7 +123,7 @@ public class CreateOrderTest {
         order.addIngredientToOrder(orderClient.getIngredientId() + randomString(3));
         Response response = orderClient.createOrderWithAuth(accessToken, order);
 
-        orderClient.checkStatusCode(response, statusCode);
+        orderClient.checkStatusCode(response, HttpStatus.SC_INTERNAL_SERVER_ERROR);
     }
 
 }

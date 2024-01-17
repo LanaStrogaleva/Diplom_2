@@ -3,6 +3,7 @@ package user;
 import io.qameta.allure.Step;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
+import org.hamcrest.Matcher;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.notNullValue;
@@ -85,9 +86,9 @@ public class UserClient {
     }
 
     @Step("Проверить статус код")
-    public void checkStatusCode(Response response, int statusCode) {
+    public void checkStatusCode(Response response, int httpStatus) {
         response.then().assertThat()
-                .statusCode(statusCode);
+                .statusCode(httpStatus);
     }
 
     @Step("Проверить сообщение в теле ответа")

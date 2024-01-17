@@ -1,8 +1,10 @@
 package user;
 
+import com.github.javafaker.Faker;
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
+import org.apache.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,13 +17,14 @@ public class ChangeUserDataTest {
 
     @Before
     public void SetUp() {
+        Faker faker = new Faker();
         UserClient userClient = new UserClient();
         userClient.setBaseURL();
 
         User user = new User()
-                .withEmail(randomString(6) + "@yandex.ru")
-                .withPassword(randomString(6))
-                .withName(randomString(6));
+                .withEmail(faker.internet().emailAddress())
+                .withPassword(faker.internet().password(6,7))
+                .withName(faker.name().name());
 
         accessToken = userClient.createUser(user).body().path("accessToken").toString().substring(7);
     }
@@ -38,10 +41,10 @@ public class ChangeUserDataTest {
     @DisplayName("Изменение данных пользователя (с авторизацией)")
     @Description("Изменение имени и email пользователя (с авторизацией). Запрос возвращает код ответа - 200")
     public void changeUserDataAuth() {
+        Faker faker = new Faker();
         Boolean success = true;
-        int statusCode = 200;
-        String newName = randomString(7);
-        String newEmail = randomString(7) + "@mail.ru";
+        String newName = faker.name().name();
+        String newEmail = faker.internet().emailAddress();
 
         UserClient userClient = new UserClient();
 
@@ -49,7 +52,7 @@ public class ChangeUserDataTest {
 
         Response changeResponse = userClient.changeUserDataWithAuth(accessToken, newUser);
 
-        userClient.checkStatusCode(changeResponse, statusCode);
+        userClient.checkStatusCode(changeResponse, HttpStatus.SC_OK);
         userClient.checkResponseBodyNotEmpty(changeResponse);
         userClient.checkIsSuccessResponse(changeResponse, success);
         userClient.checkEmailResponseBody(changeResponse, newUser.getEmail());
@@ -62,11 +65,11 @@ public class ChangeUserDataTest {
     @DisplayName("Изменение данных пользователя (без авторизации)")
     @Description("Изменение имени email пользователя (без авторизации). Запрос возвращает код ответа - 401")
     public void changeUserDataWithoutAuth() {
+        Faker faker = new Faker();
         Boolean success = false;
-        int statusCode = 401;
         String message = "You should be authorised";
-        String newName = randomString(7);
-        String newEmail = randomString(7) + "@mail.ru";
+        String newName = faker.name().name();
+        String newEmail = faker.internet().emailAddress();
 
         UserClient userClient = new UserClient();
 
@@ -74,7 +77,7 @@ public class ChangeUserDataTest {
 
         Response changeResponse = userClient.changeUserDataWithoutAuth(newUser);
 
-        userClient.checkStatusCode(changeResponse, statusCode);
+        userClient.checkStatusCode(changeResponse, HttpStatus.SC_UNAUTHORIZED);
         userClient.checkResponseBodyNotEmpty(changeResponse);
         userClient.checkIsSuccessResponse(changeResponse, success);
         userClient.checkResponseBodyMessage(changeResponse, message);
